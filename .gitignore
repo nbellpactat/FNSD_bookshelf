@@ -1,6 +1,9 @@
 # Ignore Jetbrains IDE Config
 .idea
 
+# Ignore Virtualenv libraries
+venv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
