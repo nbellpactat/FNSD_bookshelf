@@ -29,6 +29,9 @@ def create_app(test_config=None):
     @app.route('/books')
     def get_books():
         books = Book.query.order_by(Book.id).all()
+        if len(books) == 0:
+            abort(404)
+
         page = request.args.get('page', 1, type=int)
         start = (page - 1) * 8
         end = start + 8
@@ -50,43 +53,72 @@ def create_app(test_config=None):
             abort(404)
         else:
             if request.method == 'PATCH':
-                book.rating = request.get_json()['rating']
-                book.update()
-                return jsonify(
-                    {
-                        'success': True
-                    }
-                )
+                try:
+                    book.rating = request.get_json()['rating']
+                    book.update()
+                    return jsonify(
+                        {
+                            'success': True
+                        }
+                    )
+                except:
+                    abort(400)
             elif request.method == 'DELETE':
-                book.delete()
-                books = Book.query.all()
-                formatted_books = [book.format() for book in books]
-                return jsonify(
-                    {
-                        'success': True,
-                        'deleted': book_id,
-                        'books': formatted_books,
-                        'total_books': len(formatted_books)
-                    }
-                )
+                try:
+                    book.delete()
+                    books = Book.query.all()
+                    formatted_books = [book.format() for book in books]
+                    return jsonify(
+                        {
+                            'success': True,
+                            'deleted': book_id,
+                            'books': formatted_books,
+                            'total_books': len(formatted_books)
+                        }
+                    )
+                except:
+                    abort(422)
 
     @app.route('/books', methods=['POST'])
     def create_book():
-        book = Book(
-            title=request.get_json()['title'],
-            author=request.get_json()['author'],
-            rating=request.get_json()['rating']
-        )
-        book.insert()
-        books = Book.query.all()
-        formatted_books = [book.format() for book in books]
+        try:
+            book = Book(
+                title=request.get_json()['title'],
+                author=request.get_json()['author'],
+                rating=request.get_json()['rating']
+            )
+            book.insert()
+            books = Book.query.all()
+            formatted_books = [book.format() for book in books]
+            return jsonify(
+                {
+                    'success': True,
+                    'created': book.id,
+                    'books': formatted_books,
+                    'total_books': len(formatted_books)
+                }
+            )
+        except:
+            abort(422)
+
+    @app.errorhandler(404)
+    def not_found(error):
         return jsonify(
             {
-                'success': True,
-                'created': book.id,
-                'books': formatted_books,
-                'total_books': len(formatted_books)
+                'success': False,
+                'error': 404,
+                'message': 'Not found'
             }
-        )
+        ), 404
+
+    @app.errorhandler(422)
+    def unprocessable(error):
+        return jsonify(
+            {
+                'success': False,
+                'error': 422,
+                'message': 'Unprocessable'
+            }
+        ), 422
 
     return app
