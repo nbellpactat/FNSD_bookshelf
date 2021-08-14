@@ -123,11 +123,11 @@ class BookshelfTestCase(unittest.TestCase):
 
         # self.assertEqual(book.rating, 5)
 
-    # def test_patch_book_400(self):
-    #     # Modify the wrong field of id=1 to trigger a 400
-    #     response = self.client().patch('/books/1', json={'title': 5})
-    #
-    #     self.assertEqual(response.status_code, 400)
+    def test_patch_book_400(self):
+        # Modify the wrong field of id=1 to trigger a 400
+        response = self.client().patch('/books/1', json={'title': 5})
+
+        self.assertEqual(response.status_code, 400)
 
     # DELETE method tests for /books/<int:book_id> endpoint
     # def test_delete_book(self):
