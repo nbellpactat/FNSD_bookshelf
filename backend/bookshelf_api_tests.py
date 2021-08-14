@@ -4,7 +4,7 @@ import json
 from flask_sqlalchemy import SQLAlchemy
 
 from flaskr import create_app
-from models import cleanup_db, setup_db, Book
+from models import db, cleanup_db, setup_db, Book
 
 
 class BookshelfTestCase(unittest.TestCase):
@@ -86,21 +86,24 @@ class BookshelfTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
     # POST method tests for /books endpoint
-    # def test_post_books(self):
-    #     # Add the new book to the database
-    #     response = self.client().post('/books', json=self.new_book)
-    #     data = json.loads(response.data)
-    #
-    #     # Validate the API response fields
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertEqual(data['success'], True)
-    #     self.assertTrue(data['created'])
-    #     self.assertTrue(len(data['books']))
-    #     self.assertTrue(data['total_books'])
-    #
-    #     # Validate the database
-    #     book = Book.query.filter(Book.id == 4)
-    #     self.assertTrue(book)
+    def test_post_books(self):
+        # Add the new book to the database
+        response = self.client().post('/books', json=self.new_book)
+        data = json.loads(response.data)
+
+        # Validate the API response fields
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['created'])
+        self.assertTrue(len(data['books']))
+        self.assertTrue(data['total_books'])
+
+        # Validate the database
+        db.session.close()
+        book = Book.query.filter(Book.id == '4').one_or_none()
+        # MAKE SURE YOU CLOSE THE DB SESSION AFTER ACCESSING THE DB OR IT'LL HANG FOREVERRRRRRRRR
+        db.session.close()
+        self.assertTrue(book.id, 4)
 
     def test_post_books_422(self):
         # Attempt adding an improper entry to the database
@@ -109,19 +112,21 @@ class BookshelfTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 422)
 
     # PATCH method tests for /books/<int:book_id> endpoint
-    # def test_patch_book(self):
-    #     # Modify the rating of id=1 to be 5
-    #     response = self.client().patch('/books/1', json={'rating': 5})
-    #     data = json.loads(response.data)
-    #
-    #     # Validate the API response fields
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertEqual(data['success'], True)
+    def test_patch_book(self):
+        # Modify the rating of id=1 to be 5
+        response = self.client().patch('/books/1', json={'rating': 5})
+        data = json.loads(response.data)
+
+        # Validate the API response fields
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
 
         # Validate the update in the database
-        # book = Book.query.filter(Book.id == 1).one_or_none()
+        book = Book.query.filter(Book.id == 1).one_or_none()
+        # MAKE SURE YOU CLOSE THE DB SESSION AFTER ACCESSING THE DB OR IT'LL HANG FOREVERRRRRRRRR
+        db.session.close()
 
-        # self.assertEqual(book.rating, 5)
+        self.assertEqual(book.rating, 5)
 
     def test_patch_book_400(self):
         # Modify the wrong field of id=1 to trigger a 400
@@ -130,12 +135,22 @@ class BookshelfTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
     # DELETE method tests for /books/<int:book_id> endpoint
-    # def test_delete_book(self):
-        # # Delete book id=1
-        # response = self.client().delete('/book/1')
-        # data = json.loads(response.data)
-        #
-        # #
+    def test_delete_book(self):
+        # Delete book id=1
+        response = self.client().delete('/book/1')
+        data = json.loads(response.data)
+
+        # Validate the API response fields
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(len(data['books']))
+        self.assertTrue(data['total_books'])
+
+        # Validate the database
+        book = Book.query.filter(Book.id == data['deleted']).one_or_none()
+        print(book)
+        db.session.close()
+        self.assertEqual(book, None)
 
 
 if __name__ == "__main__":
