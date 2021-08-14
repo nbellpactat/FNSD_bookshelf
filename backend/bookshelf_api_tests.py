@@ -139,7 +139,6 @@ class BookshelfTestCase(unittest.TestCase):
         # Delete book id=1
         response = self.client().delete('/books/1')
         data = json.loads(response.data)
-        print(data)
 
         # Validate the API response fields
         self.assertEqual(response.status_code, 200)
@@ -151,6 +150,12 @@ class BookshelfTestCase(unittest.TestCase):
         book = Book.query.filter(Book.id == data['deleted']).one_or_none()
         db.session.close()
         self.assertEqual(book, None)
+
+    def test_delete_422(self):
+        # Delete book of id=1000
+        response = self.client().delete('/books/1000')
+
+        self.assertEqual(response.status_code, 422)
 
 
 if __name__ == "__main__":
