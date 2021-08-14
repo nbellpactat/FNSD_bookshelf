@@ -137,8 +137,9 @@ class BookshelfTestCase(unittest.TestCase):
     # DELETE method tests for /books/<int:book_id> endpoint
     def test_delete_book(self):
         # Delete book id=1
-        response = self.client().delete('/book/1')
+        response = self.client().delete('/books/1')
         data = json.loads(response.data)
+        print(data)
 
         # Validate the API response fields
         self.assertEqual(response.status_code, 200)
@@ -148,7 +149,6 @@ class BookshelfTestCase(unittest.TestCase):
 
         # Validate the database
         book = Book.query.filter(Book.id == data['deleted']).one_or_none()
-        print(book)
         db.session.close()
         self.assertEqual(book, None)
 
