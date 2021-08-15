@@ -24,7 +24,7 @@ class BookshelfTestCase(unittest.TestCase):
         setup_db(self.app, self.database_path)
 
         # Create test data to use during the tests
-        test_data = [
+        self.test_data = [
             {
                 'title': 'The Fellowship of the Ring',
                 'author': 'J.R.R. Tolkien',
@@ -53,8 +53,8 @@ class BookshelfTestCase(unittest.TestCase):
         }
 
         # Add the test data to the database
-        for i, book in enumerate(test_data):
-            self.client().post('/books', json=test_data[i])
+        for i, book in enumerate(self.test_data):
+            self.client().post('/books', json=self.test_data[i])
 
     def tearDown(self):
         """
@@ -151,11 +151,28 @@ class BookshelfTestCase(unittest.TestCase):
         db.session.close()
         self.assertEqual(book, None)
 
-    def test_delete_422(self):
+    def test_delete_404(self):
         # Delete book of id=1000
         response = self.client().delete('/books/1000')
 
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 404)
+
+    # POST method tests for /books/search endpoint
+    def test_get_search_by_title(self):
+        response = self.client().post('/books/search', json={'title': 'the'})
+        data = json.loads(response.data)
+
+        # Validate the API response fields
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(data['books_found'], 3)
+        self.assertListEqual(data['titles_found'], [self.test_data[0]['title'], self.test_data[1]['title'], self.test_data[2]['title']])
+
+    def test_get_search_by_title_404(self):
+        response = self.client().post('/books/search', json={'title': 'shenanigans'})
+
+        # Validate the API response fields
+        self.assertEqual(response.status_code, 404)
 
 
 if __name__ == "__main__":

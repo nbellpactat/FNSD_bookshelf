@@ -77,6 +77,7 @@ def create_app(test_config=None):
                         }
                     )
                 except:
+                    # This should only happen if the DB crashes mid request...
                     abort(422)
 
     @app.route('/books', methods=['POST'])
@@ -100,6 +101,24 @@ def create_app(test_config=None):
             )
         except:
             abort(422)
+
+    @app.route('/books/search', methods=['POST'])
+    def search_books_by_title():
+        try:
+            books = Book.query.filter(Book.title.ilike(f"%{request.get_json()['title']}%")).all()
+        except:
+            abort(422)
+        if not len(books):
+            abort(404)
+        else:
+            formatted_books = [book.format() for book in books]
+            return jsonify(
+                {
+                    'success': True,
+                    'books_found': len(formatted_books),
+                    'titles_found': [book['title'] for book in formatted_books]
+                }
+            )
 
     @app.errorhandler(404)
     def not_found(error):
